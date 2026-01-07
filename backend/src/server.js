@@ -2,7 +2,7 @@ import app from './app.js';
 import { config } from './config/env.js';
 import { prisma } from './config/database.js';
 
-const PORT = config.port;
+const PORT = process.env.PORT || config.port;
 
 // Graceful shutdown
 const shutdown = async () => {

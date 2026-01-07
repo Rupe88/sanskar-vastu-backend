@@ -126,3 +126,76 @@ export const refreshTokenValidation = [
     .withMessage('Refresh token must be a string'),
 ];
 
+// Course validations
+export const courseValidation = [
+  body('title').notEmpty().trim().isLength({ min: 1, max: 255 }),
+  body('slug').notEmpty().trim().isLength({ min: 1, max: 255 }),
+  body('description').optional().isString(),
+  body('shortDescription').optional().isLength({ max: 500 }),
+  body('thumbnail').optional().isString().isURL(),
+  body('price').optional().isFloat({ min: 0 }),
+  body('isFree').optional().isBoolean(),
+  body('status').optional().isIn(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'ONGOING']),
+  body('level').optional().isIn(['Beginner', 'Intermediate', 'Advanced']),
+  body('duration').optional().isInt({ min: 0 }),
+  body('language').optional().isString(),
+  body('featured').optional().isBoolean(),
+  body('isOngoing').optional().isBoolean(),
+  body('startDate').optional().isISO8601(),
+  body('endDate').optional().isISO8601(),
+  body('tags').optional().isString(),
+  body('instructorId').notEmpty().isUUID(),
+  body('categoryId').optional().isUUID(),
+];
+
+export const courseFilterValidation = [
+  query('category').optional().isString(),
+  query('level').optional().isIn(['Beginner', 'Intermediate', 'Advanced']),
+  query('minPrice').optional().isFloat({ min: 0 }),
+  query('maxPrice').optional().isFloat({ min: 0 }),
+  query('minRating').optional().isFloat({ min: 0, max: 5 }),
+  query('tags').optional().isString(),
+  query('isOngoing').optional().isBoolean(),
+  query('featured').optional().isBoolean(),
+  query('instructor').optional().isUUID(),
+  query('search').optional().isString(),
+  query('sortBy').optional().isIn(['newest', 'oldest', 'price', 'rating', 'popularity', 'enrollments']),
+  query('order').optional().isIn(['asc', 'desc']),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+];
+
+// Instructor validations
+export const instructorValidation = [
+  body('name').notEmpty().trim().isLength({ min: 1, max: 255 }),
+  body('slug').notEmpty().trim().isLength({ min: 1, max: 255 }),
+  body('image').optional().isString().isURL(),
+  body('bio').optional().isString(),
+  body('designation').optional().trim().isLength({ max: 255 }),
+  body('specialization').optional().trim().isLength({ max: 500 }),
+  body('email').optional().isEmail(),
+  body('phone').optional().isString(),
+  body('socialLinks').optional().isJSON(),
+  body('featured').optional().isBoolean(),
+  body('order').optional().isInt(),
+];
+
+// Consultation validations
+export const consultationValidation = [
+  body('name').notEmpty().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('phone').notEmpty().isString().withMessage('Phone number is required'),
+  body('eventId').optional().isUUID().withMessage('Invalid event ID'),
+  body('consultationType').isIn(['ONLINE', 'OFFLINE']).withMessage('Consultation type must be ONLINE or OFFLINE'),
+  body('referralSource').optional().isIn(['GOOGLE_SEARCH', 'FACEBOOK', 'INSTAGRAM', 'YOUTUBE', 'FRIEND_REFERRAL', 'EVENT', 'OTHER']).withMessage('Invalid referral source'),
+  body('referralSourceOther').optional().trim().isLength({ max: 255 }).withMessage('Referral source other must be less than 255 characters')
+    .custom((value, { req }) => {
+      if (req.body.referralSource === 'OTHER' && !value) {
+        throw new Error('Referral source other is required when referral source is OTHER');
+      }
+      return true;
+    }),
+  body('source').optional().trim().isLength({ max: 100 }).withMessage('Source must be less than 100 characters'),
+  body('message').optional().isString().withMessage('Message must be a string'),
+];
+

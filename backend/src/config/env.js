@@ -2,65 +2,64 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const requiredEnvVars = [
-  'DATABASE_URL',
-  'JWT_ACCESS_SECRET',
-  'JWT_REFRESH_SECRET',
-  'SMTP_HOST',
-  'SMTP_USER',
-  'SMTP_PASS',
-];
-
-const validateEnv = () => {
-  const missing = requiredEnvVars.filter((key) => !process.env[key]);
-  
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}\n` +
-      'Please check your .env file or copy env.example to .env'
-    );
-  }
-};
-
-validateEnv();
-
 export const config = {
-  // Server
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '3000', 10),
+  port: process.env.PORT || 8000,
+  jwtSecret: process.env.JWT_SECRET || process.env.JWT_ACCESS_SECRET || 'your-secret-key-change-in-production',
+  jwtRefreshSecret:
+    process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || process.env.JWT_ACCESS_EXPIRY || '15m',
+  jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || process.env.JWT_REFRESH_EXPIRY || '7d',
   
   // Database
   databaseUrl: process.env.DATABASE_URL,
   
-  // JWT
-  jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET,
-    refreshSecret: process.env.JWT_REFRESH_SECRET,
-    accessExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
-    refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
-  },
-  
-  // Email - Nodemailer
-  smtp: {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  
-  // Email - Resend (Fallback)
-  resend: {
-    apiKey: process.env.RESEND_API_KEY || '',
-    fromEmail: process.env.RESEND_FROM_EMAIL || '',
-  },
-  
-  // Application
-  appName: process.env.APP_NAME || 'LMS Platform',
+  // Frontend URL
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3001',
   
-  // CORS - Support multiple origins for web and mobile
-  corsOrigins: process.env.CORS_ORIGINS 
+  // CORS - Multiple origins separated by commas
+  corsOrigins: process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
     : [process.env.FRONTEND_URL || 'http://localhost:3001'],
+  
+  // Email
+  smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+  smtpPort: process.env.SMTP_PORT || 587,
+  smtpUser: process.env.SMTP_USER,
+  smtpPass: process.env.SMTP_PASS,
+  smtpFrom: process.env.SMTP_FROM || process.env.SMTP_USER,
+  
+  // Resend (fallback email service)
+  resendApiKey: process.env.RESEND_API_KEY,
+  
+  // Cloudinary
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+  },
+  
+  // Payment Gateways
+  esewa: {
+    merchantId: process.env.ESEWA_MERCHANT_ID,
+    secretKey: process.env.ESEWA_SECRET_KEY,
+    environment: process.env.ESEWA_ENVIRONMENT || 'sandbox',
+  },
+  
+  esewaProductCode: process.env.ESEWA_PRODUCT_CODE || 'EPAYTEST',
+  
+  // Card Payments - Khalti (Recommended for Nepal - Supports Visa/Mastercard)
+  khalti: {
+    secretKey: process.env.KHALTI_SECRET_KEY,
+    publicKey: process.env.KHALTI_PUBLIC_KEY,
+  },
+  
+  // Card Payments - Razorpay (Alternative for Visa/Mastercard)
+  razorpay: {
+    keyId: process.env.RAZORPAY_KEY_ID,
+    keySecret: process.env.RAZORPAY_KEY_SECRET,
+  },
+  
+  // Mobile Banking
+  mobileBankingEnabled: process.env.MOBILE_BANKING_ENABLED === 'true',
 };
-
