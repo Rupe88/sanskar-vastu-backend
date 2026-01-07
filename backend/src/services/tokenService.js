@@ -4,14 +4,14 @@ import { config } from '../config/env.js';
 import { prisma } from '../config/database.js';
 
 export const generateAccessToken = (payload) => {
-  return jwt.sign(payload, config.jwt.accessSecret, {
-    expiresIn: config.jwt.accessExpiry,
+  return jwt.sign(payload, config.jwtSecret, {
+    expiresIn: config.jwtExpiresIn,
   });
 };
 
 export const generateRefreshToken = (payload) => {
-  return jwt.sign(payload, config.jwt.refreshSecret, {
-    expiresIn: config.jwt.refreshExpiry,
+  return jwt.sign(payload, config.jwtRefreshSecret, {
+    expiresIn: config.jwtRefreshExpiresIn,
   });
 };
 
@@ -22,7 +22,7 @@ export const hashRefreshToken = async (token) => {
 
 export const verifyAccessToken = (token) => {
   try {
-    return jwt.verify(token, config.jwt.accessSecret);
+    return jwt.verify(token, config.jwtSecret);
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       throw new Error('Access token expired');
@@ -33,7 +33,7 @@ export const verifyAccessToken = (token) => {
 
 export const verifyRefreshToken = (token) => {
   try {
-    return jwt.verify(token, config.jwt.refreshSecret);
+    return jwt.verify(token, config.jwtRefreshSecret);
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       throw new Error('Refresh token expired');

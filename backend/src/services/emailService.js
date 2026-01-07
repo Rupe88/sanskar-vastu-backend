@@ -8,13 +8,17 @@ let resendClient = null;
 // Initialize Nodemailer transporter
 const initNodemailer = () => {
   if (!transporter) {
+    if (!config.smtpUser || !config.smtpPass) {
+      throw new Error('SMTP configuration is missing');
+    }
+
     transporter = nodemailer.createTransport({
-      host: config.smtp.host,
-      port: config.smtp.port,
+      host: config.smtpHost,
+      port: config.smtpPort,
       secure: false,
       auth: {
-        user: config.smtp.user,
-        pass: config.smtp.pass,
+        user: config.smtpUser,
+        pass: config.smtpPass,
       },
     });
   }
@@ -23,8 +27,8 @@ const initNodemailer = () => {
 
 // Initialize Resend client
 const initResend = () => {
-  if (!resendClient && config.resend.apiKey) {
-    resendClient = new Resend(config.resend.apiKey);
+  if (!resendClient && config.resendApiKey) {
+    resendClient = new Resend(config.resendApiKey);
   }
   return resendClient;
 };
@@ -95,7 +99,7 @@ const sendWithNodemailer = async (to, subject, html) => {
   try {
     const transporter = initNodemailer();
     const mailOptions = {
-      from: `"${config.appName}" <${config.smtp.user}>`,
+      from: `"${config.appName}" <${config.smtpFrom || config.smtpUser}>`,
       to,
       subject,
       html,
@@ -116,8 +120,11 @@ const sendWithResend = async (to, subject, html) => {
       throw new Error('Resend API key not configured');
     }
 
+    const fromEmail =
+      config.resendFromEmail || config.smtpFrom || `noreply@sanskaracademy.com`;
+
     const { data, error } = await resend.emails.send({
-      from: config.resend.fromEmail || `noreply@${config.resend.apiKey.split('_')[1]}.resend.dev`,
+      from: fromEmail,
       to: [to],
       subject,
       html,

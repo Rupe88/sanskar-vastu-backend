@@ -22,6 +22,30 @@ export const register = asyncHandler(async (req, res) => {
   });
 
   if (existingUser) {
+    // If user exists but email is not verified yet, resend OTP instead of blocking
+    if (!existingUser.isEmailVerified) {
+      // Respect OTP resend limits
+      const canResend = await canResendOTP(existingUser.id, OtpType.EMAIL_VERIFICATION);
+
+      if (canResend.canResend) {
+        const otp = await createOTP(existingUser.id, OtpType.EMAIL_VERIFICATION);
+        await sendOTPEmail(email, otp, 'verification');
+      }
+
+      return res.status(200).json({
+        success: true,
+        message:
+          canResend.canResend
+            ? 'An account with this email already exists but is not verified. A new OTP has been sent to your email.'
+            : canResend.message,
+        data: {
+          userId: existingUser.id,
+          email: existingUser.email,
+        },
+      });
+    }
+
+    // Fully registered and verified account already exists
     return res.status(409).json({
       success: false,
       message: 'User with this email already exists',
@@ -85,14 +109,21 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   }
 
   // Update user as verified
-  await prisma.user.update({
+  const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: { isEmailVerified: true },
   });
 
+  // Generate tokens (same as login)
+  const accessToken = generateAccessToken({ userId: updatedUser.id, role: updatedUser.role });
+  const refreshToken = generateRefreshToken({ userId: updatedUser.id });
+
+  // Save refresh token
+  await saveRefreshToken(updatedUser.id, refreshToken);
+
   // Send welcome email
   try {
-    await sendWelcomeEmail(email, user.fullName);
+    await sendWelcomeEmail(email, updatedUser.fullName);
   } catch (error) {
     console.error('Failed to send welcome email:', error);
   }
@@ -100,6 +131,17 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Email verified successfully',
+    data: {
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        fullName: updatedUser.fullName,
+        role: updatedUser.role,
+        isEmailVerified: updatedUser.isEmailVerified,
+      },
+      accessToken,
+      refreshToken,
+    },
   });
 });
 
@@ -197,10 +239,8 @@ export const login = asyncHandler(async (req, res) => {
         role: user.role,
         isEmailVerified: user.isEmailVerified,
       },
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
+      accessToken,
+      refreshToken,
     },
   });
 });

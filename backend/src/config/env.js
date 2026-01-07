@@ -16,6 +16,7 @@ export const config = {
   
   // Frontend URL
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3001',
+  appName: process.env.APP_NAME || 'Sanskar Academy',
   
   // CORS - Multiple origins separated by commas
   corsOrigins: process.env.CORS_ORIGINS
@@ -24,13 +25,14 @@ export const config = {
   
   // Email
   smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
-  smtpPort: process.env.SMTP_PORT || 587,
+  smtpPort: Number(process.env.SMTP_PORT) || 587,
   smtpUser: process.env.SMTP_USER,
   smtpPass: process.env.SMTP_PASS,
   smtpFrom: process.env.SMTP_FROM || process.env.SMTP_USER,
   
   // Resend (fallback email service)
   resendApiKey: process.env.RESEND_API_KEY,
+  resendFromEmail: process.env.RESEND_FROM_EMAIL,
   
   // Cloudinary
   cloudinary: {
